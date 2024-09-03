@@ -6,6 +6,7 @@ import android.net.http.SslError;
 import android.os.Build;
 import android.os.SystemClock;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.util.Log;
 import android.webkit.HttpAuthHandler;
 import android.webkit.RenderProcessGoneDetail;
