@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.os.Build;
 import android.os.SystemClock;
+import android.content.Intent;
 import android.util.Log;
 import android.webkit.HttpAuthHandler;
 import android.webkit.RenderProcessGoneDetail;
@@ -34,6 +35,7 @@ import com.reactnativecommunity.webview.events.TopShouldStartLoadWithRequestEven
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 
+import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class RNCWebViewClient extends WebViewClient {
@@ -147,7 +149,40 @@ public class RNCWebViewClient extends WebViewClient {
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
         final String url = request.getUrl().toString();
-        return this.shouldOverrideUrlLoading(view, url);
+        Log.d("웹뷰 로딩 시작", url);
+
+        if (url == null || url.startsWith("http://") || url.startsWith("https://")) {
+            Log.d(TAG, "url is not intent");
+            return this.shouldOverrideUrlLoading(view, url);
+        }
+
+        try {
+            Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+            ReactContext mReactContext = (ReactContext) view.getContext();
+            PackageManager packageManager = mReactContext.getPackageManager();
+
+            if (intent.resolveActivity(packageManager) != null) {
+                Log.d(TAG, "has APP");
+                mReactContext.startActivity(intent);
+                Log.d(TAG, "ACTIVITY: ${intent.`package`}");
+                return true;
+            }
+
+        String fallbackUrl = intent.getStringExtra("browser_fallback_url");
+        if (fallbackUrl != null) {
+            Log.d(TAG, "has fallbackUrl");
+            view.loadUrl(fallbackUrl);
+            Log.d(TAG, "FALLBACK: $fallbackUrl");
+            return true;
+        }
+
+        Log.e(TAG, "Could not parse anythings");
+
+        } catch (URISyntaxException e) {
+            Log.e(TAG, "Invalid intent request", e);
+        }
+
+    return this.shouldOverrideUrlLoading(view, url);
     }
 
     @Override
