@@ -3,10 +3,12 @@ package com.reactnativecommunity.webview;
 import android.annotation.TargetApi;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
+import android.net.Uri;
 import android.os.Build;
 import android.os.SystemClock;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.ActivityNotFoundException;
 import android.util.Log;
 import android.webkit.HttpAuthHandler;
 import android.webkit.RenderProcessGoneDetail;
@@ -157,10 +159,12 @@ public class RNCWebViewClient extends WebViewClient {
             return this.shouldOverrideUrlLoading(view, url);
         }
 
+        Intent intent;
+        ReactContext mReactContext = (ReactContext) view.getContext();
+        PackageManager packageManager = mReactContext.getPackageManager();
+
         try {
-            Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
-            ReactContext mReactContext = (ReactContext) view.getContext();
-            PackageManager packageManager = mReactContext.getPackageManager();
+            intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
 
             if (intent.resolveActivity(packageManager) != null) {
                 Log.d(TAG, "has APP");
@@ -169,21 +173,30 @@ public class RNCWebViewClient extends WebViewClient {
                 return true;
             }
 
-        String fallbackUrl = intent.getStringExtra("browser_fallback_url");
-        if (fallbackUrl != null) {
-            Log.d(TAG, "has fallbackUrl");
-            view.loadUrl(fallbackUrl);
-            Log.d(TAG, "FALLBACK: $fallbackUrl");
-            return true;
-        }
-
-        Log.e(TAG, "Could not parse anythings");
-
+            String fallbackUrl = intent.getStringExtra("browser_fallback_url");
+            if (fallbackUrl != null) {
+                Log.d(TAG, "has fallbackUrl");
+                view.loadUrl(fallbackUrl);
+                Log.d(TAG, "FALLBACK: $fallbackUrl");
+                return true;
+            }
         } catch (URISyntaxException e) {
             Log.e(TAG, "Invalid intent request", e);
+            return this.shouldOverrideUrlLoading(view, url);
         }
 
-    return this.shouldOverrideUrlLoading(view, url);
+        try {
+            String pkgName = intent.getPackage();
+
+            if (pkgName != null) {
+                mReactContext.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + pkgName)));
+                return true;
+            }
+        } catch (ActivityNotFoundException e) {
+            Log.e(TAG, "Could not parse anythings");
+        }
+
+        return this.shouldOverrideUrlLoading(view, url);
     }
 
     @Override
