@@ -337,6 +337,48 @@ public class RNCWebChromeClient extends WebChromeClient implements LifecycleEven
     }
 
     @Override
+    public void onShowCustomView(View view, CustomViewCallback callback) {
+        if (mVideoView != null) {
+            callback.onCustomViewHidden();
+            return;
+        }
+
+        mVideoView = view;
+        mCustomViewCallback = callback;
+
+        ViewGroup rootView = getRootView();
+        rootView.addView(
+            mVideoView,
+            FULLSCREEN_LAYOUT_PARAMS
+        );
+
+        mVideoView.setSystemUiVisibility(FULLSCREEN_SYSTEM_UI_VISIBILITY);
+    }
+
+    @Override
+    public void onHideCustomView() {
+        if (mVideoView == null) {
+            return;
+        }
+
+        ViewGroup rootView = getRootView();
+        rootView.removeView(mVideoView);
+
+        mVideoView = null;
+
+        if (mCustomViewCallback != null) {
+            mCustomViewCallback.onCustomViewHidden();
+            mCustomViewCallback = null;
+        }
+
+        // 시스템 UI를 원래대로 돌리기
+        this.mWebView.getThemedReactContext().getCurrentActivity()
+            .getWindow()
+            .getDecorView()
+            .setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+    }
+
+    @Override
     public void onHostResume() {
         if (mVideoView != null && mVideoView.getSystemUiVisibility() != FULLSCREEN_SYSTEM_UI_VISIBILITY) {
             mVideoView.setSystemUiVisibility(FULLSCREEN_SYSTEM_UI_VISIBILITY);
