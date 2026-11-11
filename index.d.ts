@@ -5,7 +5,9 @@ export { FileDownload, WebViewMessageEvent, WebViewNavigation } from './lib/WebV
 
 export type WebViewProps = IOSWebViewProps & AndroidWebViewProps & WindowsWebViewProps;
 
-declare class WebView<P = undefined> extends Component<WebViewProps & P> {
+// upstream 14.x에서 기본값이 undefined로 바뀌어 props가 never가 되는 버그가 있어 {}로 되돌린다(17.x에서 수정됨).
+// eslint-disable-next-line @typescript-eslint/ban-types
+declare class WebView<P = {}> extends Component<WebViewProps & P> {
   /**
    * Go back one page in the webview's history.
    */
