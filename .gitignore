@@ -54,7 +54,7 @@ android/gradle
 android/gradlew
 android/gradlew.bat
 
-lib/
+# lib/는 git 의존성으로 설치할 때 타입(.d.ts)을 제공하기 위해 커밋한다.
 .classpath
 .project
 .settings/
